@@ -41,17 +41,20 @@ export function useCreateLogEntry() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (values: EntryFormValues) => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
       const { dishes, ...entry } = values
       const { data, error } = await supabase
         .from('log_entries')
-        .insert(entry)
+        .insert({ ...entry, user_id: user.id })
         .select()
         .single()
       if (error) throw error
 
       if (dishes.length > 0) {
         const { error: dishError } = await supabase.from('dishes').insert(
-          dishes.map(d => ({ ...d, log_entry_id: data.id, id: undefined }))
+          dishes.map(d => ({ dish_name: d.dish_name, rating: d.rating, notes: d.notes, log_entry_id: data.id, user_id: user.id }))
         )
         if (dishError) throw dishError
       }
