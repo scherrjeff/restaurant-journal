@@ -69,6 +69,9 @@ export function useUpdateLogEntry() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, values }: { id: string; values: EntryFormValues }) => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
       const { dishes, ...entry } = values
       const { error } = await supabase.from('log_entries').update(entry).eq('id', id)
       if (error) throw error
@@ -79,7 +82,7 @@ export function useUpdateLogEntry() {
 
       if (dishes.length > 0) {
         const { error: dishError } = await supabase.from('dishes').insert(
-          dishes.map(d => ({ dish_name: d.dish_name, rating: d.rating, notes: d.notes, log_entry_id: id }))
+          dishes.map(d => ({ dish_name: d.dish_name, rating: d.rating, notes: d.notes, log_entry_id: id, user_id: user.id }))
         )
         if (dishError) throw dishError
       }
