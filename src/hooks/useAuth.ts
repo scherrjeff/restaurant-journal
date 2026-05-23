@@ -20,9 +20,10 @@ export function useAuth() {
   }, [])
 
   async function signInWithMagicLink(email: string) {
+    const redirectTo = import.meta.env.VITE_APP_URL ?? window.location.origin
     return supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: window.location.origin },
+      options: { emailRedirectTo: redirectTo },
     })
   }
 
