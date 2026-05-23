@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Landing Page Playground — Restaurant Journal</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --border: #2a2d3a;
+    --text: #e2e4ed;
+    --muted: #6b7280;
+    --accent: #d716f9;
+    --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 13px;
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    grid-template-rows: 44px 1fr;
+    overflow: hidden;
+  }
+
+  /* ── Top bar ── */
+  .topbar {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 12px;
+  }
+  .topbar-title { font-weight: 600; font-size: 13px; }
+  .topbar-sub { color: var(--muted); font-size: 12px; }
+  .preset-row { margin-left: auto; display: flex; gap: 6px; }
+  .preset-btn {
+    background: var(--bg); border: 1px solid var(--border);
+    color: var(--text); font-size: 11px; padding: 3px 10px;
+    border-radius: 5px; cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .preset-btn:hover { background: var(--border); }
+  .preset-btn.active { border-color: var(--accent); color: var(--accent); }
+
+  /* ── Left controls ── */
+  .controls {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .controls::-webkit-scrollbar { width: 4px; }
+  .controls::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .section-title {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 10px;
+  }
+  .control-group { display: flex; flex-direction: column; gap: 12px; }
+  .ctrl { display: flex; flex-direction: column; gap: 5px; }
+  .ctrl label {
+    font-size: 11px; color: var(--muted);
+    display: flex; justify-content: space-between;
+  }
+  .ctrl label span { color: var(--text); font-family: var(--mono); font-size: 11px; }
+
+  input[type=range] {
+    -webkit-appearance: none; width: 100%; height: 3px;
+    background: var(--border); border-radius: 2px; outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 13px; height: 13px;
+    border-radius: 50%; background: var(--accent); cursor: pointer;
+  }
+  input[type=color] {
+    -webkit-appearance: none; width: 32px; height: 24px;
+    border: 1px solid var(--border); border-radius: 4px;
+    background: none; cursor: pointer; padding: 0;
+  }
+  input[type=color]::-webkit-color-swatch-wrapper { padding: 2px; }
+  input[type=color]::-webkit-color-swatch { border: none; border-radius: 3px; }
+
+  .color-row { display: flex; align-items: center; gap: 8px; }
+  .color-swatches { display: flex; gap: 5px; flex-wrap: wrap; }
+  .swatch {
+    width: 20px; height: 20px; border-radius: 4px;
+    cursor: pointer; border: 2px solid transparent; transition: border-color 0.15s;
+  }
+  .swatch.active { border-color: white; }
+
+  .toggle-row {
+    display: flex; align-items: center;
+    justify-content: space-between; font-size: 11px; color: var(--muted);
+  }
+  .toggle {
+    position: relative; width: 32px; height: 18px;
+    background: var(--border); border-radius: 9px;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .toggle.on { background: var(--accent); }
+  .toggle::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 14px; height: 14px; background: white;
+    border-radius: 50%; transition: transform 0.2s;
+  }
+  .toggle.on::after { transform: translateX(14px); }
+
+  select {
+    background: var(--bg); border: 1px solid var(--border);
+    color: var(--text); font-size: 11px; padding: 4px 8px;
+    border-radius: 5px; outline: none; cursor: pointer; width: 100%;
+  }
+  input[type=text] {
+    background: var(--bg); border: 1px solid var(--border);
+    color: var(--text); font-size: 11px; padding: 5px 8px;
+    border-radius: 5px; outline: none; width: 100%;
+  }
+  input[type=text]:focus { border-color: var(--accent); }
+  .divider { border: none; border-top: 1px solid var(--border); }
+
+  /* ── Right panel ── */
+  .right-panel {
+    display: grid;
+    grid-template-rows: 40px 1fr auto;
+    overflow: hidden;
+  }
+
+  .view-tabs {
+    display: flex; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 12px; gap: 2px; align-items: flex-end;
+  }
+  .view-tab {
+    font-size: 12px; padding: 8px 14px; cursor: pointer;
+    color: var(--muted); border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s; user-select: none;
+  }
+  .view-tab:hover { color: var(--text); }
+  .view-tab.active { color: var(--text); border-bottom-color: var(--accent); }
+
+  /* ── Preview pane (iframe) ── */
+  .preview-pane {
+    overflow: hidden;
+    background: #e5e7eb;
+    display: flex;
+    flex-direction: column;
+  }
+  #previewFrame {
+    width: 100%; flex: 1; border: none; display: block;
+  }
+
+  /* ── Code pane ── */
+  .code-pane {
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .code-pane.visible { display: flex; }
+
+  .code-tabs {
+    display: flex; background: #161b22;
+    border-bottom: 1px solid #30363d;
+    padding: 0 12px; flex-shrink: 0;
+  }
+  .code-tab {
+    font-size: 11px; font-family: var(--mono);
+    padding: 8px 14px; cursor: pointer; color: #6e7681;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .code-tab:hover { color: #c9d1d9; }
+  .code-tab.active { color: #c9d1d9; border-bottom-color: #388bfd; }
+
+  .editor-wrap {
+    flex: 3;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  #codeEditor {
+    flex: 1;
+    width: 100%;
+    resize: none;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: #c9d1d9;
+    background: #0d1117;
+    border: none;
+    outline: none;
+    padding: 16px 20px;
+    tab-size: 2;
+    overflow: auto;
+  }
+  #codeEditor::-webkit-scrollbar { width: 8px; }
+  #codeEditor::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+
+  .code-preview-bar {
+    height: 30px;
+    background: #161b22;
+    border-top: 1px solid #30363d;
+    border-bottom: 1px solid #30363d;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    font-size: 11px;
+    color: #6e7681;
+    flex-shrink: 0;
+  }
+  .code-preview-bar span { display: flex; align-items: center; gap: 6px; }
+  .live-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #22c55e;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  .jsx-note {
+    color: #f2cc60; font-size: 11px;
+  }
+
+  .code-preview-wrap {
+    flex: 2;
+    overflow: hidden;
+    min-height: 0;
+  }
+  #codePreviewFrame {
+    width: 100%; height: 100%; border: none; display: block;
+  }
+
+  /* ── Prompt panel ── */
+  .prompt-panel {
+    background: var(--surface); border-top: 1px solid var(--border);
+    padding: 12px 16px; display: flex; gap: 12px;
+    align-items: flex-start; max-height: 120px;
+  }
+  .prompt-text {
+    flex: 1; font-family: var(--mono); font-size: 11.5px;
+    color: #a5b4fc; line-height: 1.6;
+    overflow-y: auto; max-height: 96px;
+  }
+  .copy-btn {
+    flex-shrink: 0; background: var(--accent); border: none;
+    color: white; font-size: 11px; font-weight: 600;
+    padding: 6px 14px; border-radius: 5px;
+    cursor: pointer; transition: opacity 0.15s; white-space: nowrap;
+  }
+  .copy-btn:hover { opacity: 0.85; }
+  .copy-btn.copied { background: #22c55e; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <span class="topbar-title">🍽️ Landing Page Playground</span>
+  <span class="topbar-sub">Restaurant Journal</span>
+  <div class="preset-row">
+    <button class="preset-btn active" onclick="applyPreset('current')">Current</button>
+    <button class="preset-btn" onclick="applyPreset('bold')">Bold</button>
+    <button class="preset-btn" onclick="applyPreset('minimal')">Minimal</button>
+    <button class="preset-btn" onclick="applyPreset('warm')">Warm</button>
+    <button class="preset-btn" onclick="applyPreset('dark')">Dark Mode</button>
+  </div>
+</div>
+
+<!-- Controls -->
+<div class="controls">
+
+  <div>
+    <div class="section-title">Brand Color</div>
+    <div class="control-group">
+      <div class="ctrl">
+        <label>Accent color</label>
+        <div class="color-row">
+          <input type="color" id="colorPicker" value="#d716f9" oninput="pickColor(this.value)" />
+          <div class="color-swatches">
+            <div class="swatch active" style="background:#d716f9" onclick="pickColor('#d716f9')"></div>
+            <div class="swatch" style="background:#6366f1" onclick="pickColor('#6366f1')"></div>
+            <div class="swatch" style="background:#ec4899" onclick="pickColor('#ec4899')"></div>
+            <div class="swatch" style="background:#f97316" onclick="pickColor('#f97316')"></div>
+            <div class="swatch" style="background:#10b981" onclick="pickColor('#10b981')"></div>
+            <div class="swatch" style="background:#3b82f6" onclick="pickColor('#3b82f6')"></div>
+            <div class="swatch" style="background:#ef4444" onclick="pickColor('#ef4444')"></div>
+            <div class="swatch" style="background:#8b5cf6" onclick="pickColor('#8b5cf6')"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <div>
+    <div class="section-title">Typography</div>
+    <div class="control-group">
+      <div class="ctrl">
+        <label>Headline size <span id="h1SizeVal">48px</span></label>
+        <input type="range" id="h1Size" min="32" max="72" value="48" oninput="updateVal('h1SizeVal',this.value+'px');updateAll()" />
+      </div>
+      <div class="ctrl">
+        <label>Body size <span id="bodySizeVal">16px</span></label>
+        <input type="range" id="bodySize" min="13" max="20" value="16" oninput="updateVal('bodySizeVal',this.value+'px');updateAll()" />
+      </div>
+      <div class="ctrl">
+        <label>Font</label>
+        <select id="fontFamily" onchange="updateAll()">
+          <option value="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">System UI (default)</option>
+          <option value="Georgia, 'Times New Roman', serif">Georgia (serif)</option>
+          <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Helvetica Neue</option>
+          <option value="'Courier New', Courier, monospace">Courier (mono)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <div>
+    <div class="section-title">Shapes</div>
+    <div class="control-group">
+      <div class="ctrl">
+        <label>Button radius <span id="btnRadiusVal">8px</span></label>
+        <input type="range" id="btnRadius" min="0" max="32" value="8" oninput="updateVal('btnRadiusVal',this.value+'px');updateAll()" />
+      </div>
+      <div class="ctrl">
+        <label>Card radius <span id="cardRadiusVal">12px</span></label>
+        <input type="range" id="cardRadius" min="0" max="24" value="12" oninput="updateVal('cardRadiusVal',this.value+'px');updateAll()" />
+      </div>
+      <div class="ctrl">
+        <label>Card shadow <span id="shadowVal">sm</span></label>
+        <input type="range" id="shadow" min="0" max="3" value="1" step="1" oninput="updateShadowLabel();updateAll()" />
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <div>
+    <div class="section-title">Spacing</div>
+    <div class="control-group">
+      <div class="ctrl">
+        <label>Hero padding <span id="heroPadVal">96px</span></label>
+        <input type="range" id="heroPad" min="40" max="160" value="96" oninput="updateVal('heroPadVal',this.value+'px');updateAll()" />
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <div>
+    <div class="section-title">Content</div>
+    <div class="control-group">
+      <div class="ctrl">
+        <label>Headline</label>
+        <input type="text" id="headline" value="Your personal restaurant diary" oninput="updateAll()" />
+      </div>
+      <div class="ctrl">
+        <label>Accent word(s)</label>
+        <input type="text" id="accentWord" value="restaurant diary" oninput="updateAll()" />
+      </div>
+      <div class="ctrl">
+        <label>Tagline</label>
+        <input type="text" id="tagline" value="Log meals, rate dishes, and remember every great dining experience — all in one beautiful place." oninput="updateAll()" />
+      </div>
+      <div class="ctrl">
+        <label>CTA text</label>
+        <input type="text" id="ctaText" value="Start your journal →" oninput="updateAll()" />
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <div>
+    <div class="section-title">Background</div>
+    <div class="control-group">
+      <div class="ctrl">
+        <label>Page background</label>
+        <select id="pageBg" onchange="updateAll()">
+          <option value="#f9fafb">Gray 50 (default)</option>
+          <option value="#f3f4f6">Gray 100</option>
+          <option value="#ffffff">White</option>
+          <option value="#fdf4ff">Faint purple</option>
+          <option value="#1a1a2e">Dark navy</option>
+          <option value="#0f172a">Dark slate</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <div>
+    <div class="section-title">Sections</div>
+    <div class="control-group">
+      <div class="toggle-row">
+        Show bottom CTA
+        <div class="toggle on" id="toggleCta" onclick="toggleSection('showCta','toggleCta')"></div>
+      </div>
+      <div class="toggle-row">
+        Show hero emoji
+        <div class="toggle on" id="toggleEmoji" onclick="toggleSection('showEmoji','toggleEmoji')"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Right panel -->
+<div class="right-panel">
+
+  <div class="view-tabs">
+    <div class="view-tab active" id="tabPreview" onclick="switchView('preview')">Preview</div>
+    <div class="view-tab" id="tabCode" onclick="switchView('code')">Code</div>
+  </div>
+
+  <!-- Preview pane -->
+  <div class="preview-pane" id="previewPane">
+    <iframe id="previewFrame" sandbox="allow-same-origin"></iframe>
+  </div>
+
+  <!-- Code pane -->
+  <div class="code-pane" id="codePane">
+    <div class="code-tabs">
+      <div class="code-tab active" id="ct-html" onclick="switchCodeTab('html')">HTML</div>
+      <div class="code-tab" id="ct-css"  onclick="switchCodeTab('css')">CSS</div>
+      <div class="code-tab" id="ct-jsx"  onclick="switchCodeTab('jsx')">JSX</div>
+    </div>
+    <div class="editor-wrap">
+      <textarea id="codeEditor" spellcheck="false"></textarea>
+    </div>
+    <div class="code-preview-bar">
+      <span><div class="live-dot"></div> Live preview</span>
+      <span id="jsxNote" class="jsx-note" style="display:none">JSX edits don't affect the preview</span>
+    </div>
+    <div class="code-preview-wrap">
+      <iframe id="codePreviewFrame" sandbox="allow-same-origin"></iframe>
+    </div>
+  </div>
+
+  <!-- Prompt -->
+  <div class="prompt-panel">
+    <div class="prompt-text" id="promptText">Adjust controls to generate a prompt.</div>
+    <button class="copy-btn" id="copyBtn" onclick="copyPrompt()">Copy Prompt</button>
+  </div>
+
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────
+
+const DEFAULTS = {
+  color: '#d716f9', h1Size: 48, bodySize: 16,
+  fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+  btnRadius: 8, cardRadius: 12, shadow: 1, heroPad: 96,
+  headline: 'Your personal restaurant diary', accentWord: 'restaurant diary',
+  tagline: 'Log meals, rate dishes, and remember every great dining experience — all in one beautiful place.',
+  ctaText: 'Start your journal →', pageBg: '#f9fafb',
+  showCta: true, showEmoji: true,
+};
+const state = { ...DEFAULTS };
+
+const SHADOWS = [
+  'none',
+  '0 1px 3px rgba(0,0,0,0.08)',
+  '0 4px 12px rgba(0,0,0,0.12)',
+  '0 8px 24px rgba(0,0,0,0.16)',
+];
+const SHADOW_LABELS = ['none', 'sm', 'md', 'lg'];
+
+// Stores the current content of each code tab (HTML and CSS regenerated from
+// state, JSX is always static; user edits overwrite html/css directly)
+const editorContent = { html: '', css: '', jsx: '' };
+
+const JSX_SOURCE = `import { Link, Navigate } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
+import LoadingSpinner from '../components/ui/LoadingSpinner'
+
+const features = [
+  {
+    icon: '📝',
+    title: 'Log every meal',
+    description:
+      'Rate restaurants, tag occasions, and capture notes while the memory is still fresh.',
+  },
+  {
+    icon: '🍽️',
+    title: 'Track your dishes',
+    description:
+      'Record individual dishes per visit so you always know what to order on your next trip.',
+  },
+  {
+    icon: '⭐',
+    title: 'Rate & remember',
+    description:
+      'Star ratings and cuisine tags make it easy to browse your history and share recommendations.',
+  },
+]
+
+export default function LandingPage() {
+  const { user, loading } = useAuth()
+
+  if (loading) return <LoadingSpinner />
+  if (user) return <Navigate to="/journal" replace />
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Nav */}
+      <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/90 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-3">
+          <span className="text-lg font-bold text-[#d716f9] tracking-tight">
+            🍽️ Restaurant Journal
+          </span>
+          <Link
+            to="/login"
+            className="rounded-lg bg-[#d716f9] px-4 py-2 text-sm font-medium text-white hover:bg-[#c010e0] transition-colors"
+          >
+            Sign in
+          </Link>
+        </div>
+      </header>
+
+      {/* Hero */}
+      <section className="mx-auto max-w-4xl px-6 py-24 text-center">
+        <span className="text-6xl">🍽️</span>
+        <h1 className="mt-6 text-4xl font-bold text-gray-900 sm:text-5xl">
+          Your personal{' '}
+          <span className="text-[#d716f9]">restaurant diary</span>
+        </h1>
+        <p className="mt-4 text-lg text-gray-500 max-w-xl mx-auto">
+          Log meals, rate dishes, and remember every great dining experience —
+          all in one beautiful place.
+        </p>
+        <div className="mt-8 flex items-center justify-center gap-4">
+          <Link
+            to="/login"
+            className="rounded-lg bg-[#d716f9] px-6 py-3 text-base font-semibold text-white hover:bg-[#c010e0] transition-colors shadow-sm"
+          >
+            Start your journal →
+          </Link>
+          <span className="text-sm text-gray-400">Free, no credit card needed</span>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="mx-auto max-w-4xl px-6 pb-24">
+        <div className="grid gap-6 sm:grid-cols-3">
+          {features.map(f => (
+            <div
+              key={f.title}
+              className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
+            >
+              <span className="text-3xl">{f.icon}</span>
+              <h3 className="mt-3 font-semibold text-gray-900">{f.title}</h3>
+              <p className="mt-1 text-sm text-gray-500 leading-relaxed">{f.description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Bottom CTA */}
+      <section className="border-t border-gray-200 bg-white">
+        <div className="mx-auto max-w-4xl px-6 py-16 text-center">
+          <h2 className="text-2xl font-bold text-gray-900">
+            Ready to start logging?
+          </h2>
+          <p className="mt-2 text-gray-500">
+            Join food lovers who never forget a great meal.
+          </p>
+          <Link
+            to="/login"
+            className="mt-6 inline-block rounded-lg bg-[#d716f9] px-6 py-3 text-base font-semibold text-white hover:bg-[#c010e0] transition-colors"
+          >
+            Get started free
+          </Link>
+        </div>
+      </section>
+    </div>
+  )
+}`;
+
+// ── Code generators ───────────────────────────────────────────────────────
+
+function generateHTML() {
+  const ac = state.color;
+  const ht = state.headline, at = state.accentWord;
+  const headlineInner = at && ht.includes(at)
+    ? ht.replace(at, `<span style="color: ${ac}">${at}</span>`)
+    : ht;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Restaurant Journal</title>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <span class="brand">🍽️ Restaurant Journal</span>
+      <a class="btn" href="/login">Sign in</a>
+    </div>
+  </header>
+
+  <section class="hero">
+${state.showEmoji ? '    <div class="hero-icon">🍽️</div>\n' : ''}\
+    <h1 class="hero-headline">${headlineInner}</h1>
+    <p class="hero-tagline">${state.tagline}</p>
+    <div class="hero-ctas">
+      <a class="btn btn-primary" href="/login">${state.ctaText}</a>
+      <span class="cta-note">Free, no credit card needed</span>
+    </div>
+  </section>
+
+  <section class="features">
+    <div class="features-grid">
+
+      <div class="card">
+        <span class="card-icon">📝</span>
+        <h3>Log every meal</h3>
+        <p>Rate restaurants, tag occasions, and capture notes while the memory is still fresh.</p>
+      </div>
+
+      <div class="card">
+        <span class="card-icon">🍽️</span>
+        <h3>Track your dishes</h3>
+        <p>Record individual dishes per visit so you always know what to order on your next trip.</p>
+      </div>
+
+      <div class="card">
+        <span class="card-icon">⭐</span>
+        <h3>Rate &amp; remember</h3>
+        <p>Star ratings and cuisine tags make it easy to browse your history and share recommendations.</p>
+      </div>
+
+    </div>
+  </section>
+${state.showCta ? `
+  <section class="footer-cta">
+    <div class="footer-inner">
+      <h2>Ready to start logging?</h2>
+      <p>Join food lovers who never forget a great meal.</p>
+      <a class="btn btn-primary" href="/login">Get started free</a>
+    </div>
+  </section>
+` : ''}
+</body>
+</html>`;
+}
+
+function generateCSS() {
+  const ac = state.color;
+  const br = state.btnRadius + 'px';
+  const cr = state.cardRadius + 'px';
+  const sh = SHADOWS[state.shadow];
+  const hp = state.heroPad + 'px';
+  const ff = state.fontFamily;
+  const bs = state.bodySize + 'px';
+  const h1s = state.h1Size + 'px';
+  const bg = state.pageBg;
+  const isDark = ['#0f172a','#1a1a2e'].includes(bg);
+  const textMain   = isDark ? '#f9fafb' : '#111827';
+  const textMuted  = isDark ? '#9ca3af' : '#6b7280';
+  const cardBg     = isDark ? 'rgba(255,255,255,0.07)' : '#ffffff';
+  const cardBorder = isDark ? 'rgba(255,255,255,0.1)'  : '#e5e7eb';
+  const headerBg   = isDark ? 'rgba(15,23,42,0.92)'    : 'rgba(255,255,255,0.92)';
+  const headerBdr  = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+  const footerBg   = isDark ? '#1e293b'  : '#ffffff';
+  const footerBdr  = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+
+  return `*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: ${ff};
+  font-size: ${bs};
+  background-color: ${bg};
+  color: ${textMain};
+  min-height: 100vh;
+}
+
+/* Header */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: ${headerBg};
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid ${headerBdr};
+}
+
+.header-inner {
+  max-width: 896px;
+  margin: 0 auto;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  font-size: 17px;
+  font-weight: 700;
+  color: ${ac};
+  letter-spacing: -0.01em;
+}
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #ffffff;
+  background-color: ${ac};
+  border-radius: ${br};
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.btn-primary {
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.btn:hover { opacity: 0.88; }
+
+/* Hero */
+.hero {
+  max-width: 896px;
+  margin: 0 auto;
+  padding: ${hp} 24px;
+  text-align: center;
+}
+
+.hero-icon { font-size: 60px; line-height: 1; }
+
+.hero-headline {
+  margin-top: 24px;
+  font-size: ${h1s};
+  font-weight: 700;
+  line-height: 1.15;
+  color: ${textMain};
+}
+
+.hero-headline span { color: ${ac}; }
+
+.hero-tagline {
+  margin-top: 16px;
+  font-size: ${bs};
+  color: ${textMuted};
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+
+.hero-ctas {
+  margin-top: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.cta-note { font-size: 13px; color: #9ca3af; }
+
+/* Feature cards */
+.features {
+  max-width: 896px;
+  margin: 0 auto;
+  padding: 0 24px ${hp};
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.card {
+  background: ${cardBg};
+  border: 1px solid ${cardBorder};
+  border-radius: ${cr};
+  padding: 24px;${sh !== 'none' ? '\n  box-shadow: ' + sh + ';' : ''}
+}
+
+.card-icon { font-size: 28px; }
+
+.card h3 {
+  margin-top: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: ${textMain};
+}
+
+.card p {
+  margin-top: 4px;
+  font-size: 13px;
+  color: ${textMuted};
+  line-height: 1.55;
+}
+
+/* Footer CTA */
+.footer-cta {
+  border-top: 1px solid ${footerBdr};
+  background: ${footerBg};
+}
+
+.footer-inner {
+  max-width: 896px;
+  margin: 0 auto;
+  padding: 64px 24px;
+  text-align: center;
+}
+
+.footer-inner h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: ${textMain};
+}
+
+.footer-inner p {
+  margin-top: 8px;
+  font-size: 14px;
+  color: ${textMuted};
+}
+
+.footer-inner .btn-primary { margin-top: 24px; }`;
+}
+
+// ── Iframe rendering ──────────────────────────────────────────────────────
+
+function buildSrcdoc() {
+  const html = editorContent.html;
+  const css  = editorContent.css;
+  const styleTag = `<style>\n${css}\n</style>`;
+  return html.includes('</head>')
+    ? html.replace('</head>', `${styleTag}\n</head>`)
+    : `${styleTag}\n${html}`;
+}
+
+function updateIframes() {
+  const srcdoc = buildSrcdoc();
+  document.getElementById('previewFrame').srcdoc = srcdoc;
+  document.getElementById('codePreviewFrame').srcdoc = srcdoc;
+}
+
+// ── View / tab switching ──────────────────────────────────────────────────
+
+let activeView = 'preview';
+let activeCodeTab = 'html';
+
+function switchView(view) {
+  activeView = view;
+  document.getElementById('tabPreview').classList.toggle('active', view === 'preview');
+  document.getElementById('tabCode').classList.toggle('active', view === 'code');
+  document.getElementById('previewPane').style.display = view === 'preview' ? '' : 'none';
+  document.getElementById('codePane').classList.toggle('visible', view === 'code');
+  if (view === 'code') populateEditor();
+}
+
+function switchCodeTab(tab) {
+  activeCodeTab = tab;
+  ['html','css','jsx'].forEach(t =>
+    document.getElementById('ct-' + t).classList.toggle('active', t === tab)
+  );
+  document.getElementById('jsxNote').style.display = tab === 'jsx' ? '' : 'none';
+  populateEditor();
+}
+
+function populateEditor() {
+  const ta = document.getElementById('codeEditor');
+  if (activeCodeTab === 'jsx') {
+    ta.value = JSX_SOURCE;
+    ta.readOnly = true;
+    ta.style.opacity = '0.7';
+    ta.style.cursor = 'default';
+  } else {
+    ta.value = editorContent[activeCodeTab];
+    ta.readOnly = false;
+    ta.style.opacity = '1';
+    ta.style.cursor = 'text';
+  }
+}
+
+// Called on every keystroke in the editor
+function onCodeEdit() {
+  if (activeCodeTab === 'jsx') return;
+  editorContent[activeCodeTab] = document.getElementById('codeEditor').value;
+  updateIframes();
+}
+
+// Tab key inserts spaces instead of shifting focus
+document.getElementById('codeEditor').addEventListener('keydown', function(e) {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const s = this.selectionStart, end = this.selectionEnd;
+    this.value = this.value.slice(0, s) + '  ' + this.value.slice(end);
+    this.selectionStart = this.selectionEnd = s + 2;
+    onCodeEdit();
+  }
+});
+document.getElementById('codeEditor').addEventListener('input', onCodeEdit);
+
+// ── Controls ──────────────────────────────────────────────────────────────
+
+function updateVal(id, val) { document.getElementById(id).textContent = val; }
+function updateShadowLabel() {
+  document.getElementById('shadowVal').textContent = SHADOW_LABELS[+document.getElementById('shadow').value];
+}
+
+function pickColor(hex) {
+  state.color = hex;
+  document.getElementById('colorPicker').value = hex;
+  document.querySelectorAll('.swatch').forEach(s =>
+    s.classList.toggle('active', (s.getAttribute('onclick') || '').includes(`'${hex}'`))
+  );
+  updateAll();
+}
+
+function toggleSection(key, toggleId) {
+  state[key] = !state[key];
+  document.getElementById(toggleId).classList.toggle('on', state[key]);
+  updateAll();
+}
+
+function readState() {
+  state.color      = document.getElementById('colorPicker').value;
+  state.h1Size     = +document.getElementById('h1Size').value;
+  state.bodySize   = +document.getElementById('bodySize').value;
+  state.fontFamily = document.getElementById('fontFamily').value;
+  state.btnRadius  = +document.getElementById('btnRadius').value;
+  state.cardRadius = +document.getElementById('cardRadius').value;
+  state.shadow     = +document.getElementById('shadow').value;
+  state.heroPad    = +document.getElementById('heroPad').value;
+  state.headline   = document.getElementById('headline').value;
+  state.accentWord = document.getElementById('accentWord').value;
+  state.tagline    = document.getElementById('tagline').value;
+  state.ctaText    = document.getElementById('ctaText').value;
+  state.pageBg     = document.getElementById('pageBg').value;
+}
+
+function updateAll() {
+  readState();
+  // Regenerate sources from state
+  editorContent.html = generateHTML();
+  editorContent.css  = generateCSS();
+  editorContent.jsx  = JSX_SOURCE;
+  // Push to iframes
+  updateIframes();
+  // Sync editor textarea if code view is open
+  if (activeView === 'code' && activeCodeTab !== 'jsx') populateEditor();
+  updatePrompt();
+}
+
+function updatePrompt() {
+  const parts = [];
+  if (state.color !== DEFAULTS.color) parts.push(`change the accent color to ${state.color}`);
+  if (state.h1Size !== DEFAULTS.h1Size) parts.push(`make the headline ${state.h1Size > DEFAULTS.h1Size ? 'larger' : 'smaller'} (${state.h1Size}px)`);
+  if (state.bodySize !== DEFAULTS.bodySize) parts.push(`set body text to ${state.bodySize}px`);
+  if (state.fontFamily !== DEFAULTS.fontFamily) {
+    const sel = document.getElementById('fontFamily');
+    parts.push(`switch the font to ${sel.options[sel.selectedIndex].text}`);
+  }
+  if (state.btnRadius !== DEFAULTS.btnRadius) {
+    const d = state.btnRadius === 0 ? 'sharp square corners' : state.btnRadius >= 24 ? 'fully rounded (pill)' : `${state.btnRadius}px rounded corners`;
+    parts.push(`give buttons ${d}`);
+  }
+  if (state.cardRadius !== DEFAULTS.cardRadius) parts.push(`set card border-radius to ${state.cardRadius}px`);
+  if (state.shadow !== DEFAULTS.shadow) parts.push(`give cards ${['no shadow','a subtle shadow','a medium shadow','a pronounced shadow'][state.shadow]}`);
+  if (state.heroPad !== DEFAULTS.heroPad) parts.push(`use ${state.heroPad > DEFAULTS.heroPad ? 'more generous' : 'tighter'} hero padding (${state.heroPad}px)`);
+  if (state.headline !== DEFAULTS.headline) parts.push(`update the headline to "${state.headline}"`);
+  if (state.accentWord !== DEFAULTS.accentWord) parts.push(`highlight "${state.accentWord}" in the accent color`);
+  if (state.tagline !== DEFAULTS.tagline) parts.push(`update the tagline to "${state.tagline}"`);
+  if (state.ctaText !== DEFAULTS.ctaText) parts.push(`change the CTA text to "${state.ctaText}"`);
+  if (state.pageBg !== DEFAULTS.pageBg) {
+    const sel = document.getElementById('pageBg');
+    parts.push(`set the background to ${sel.options[sel.selectedIndex].text}`);
+  }
+  if (!state.showCta) parts.push('remove the bottom CTA section');
+  if (!state.showEmoji) parts.push('remove the hero emoji');
+  document.getElementById('promptText').textContent = parts.length === 0
+    ? 'No changes from defaults — adjust controls to generate a prompt.'
+    : `Update the LandingPage to: ${parts.join(', ')}.`;
+}
+
+function copyPrompt() {
+  const text = document.getElementById('promptText').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = 'Copied!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy Prompt'; btn.classList.remove('copied'); }, 1800);
+  });
+}
+
+// ── Presets ───────────────────────────────────────────────────────────────
+
+const PRESETS = {
+  current: { color:'#d716f9', h1Size:48, bodySize:16, btnRadius:8,  cardRadius:12, shadow:1, heroPad:96,  pageBg:'#f9fafb', fontFamily:"-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", headline:'Your personal restaurant diary', accentWord:'restaurant diary', tagline:'Log meals, rate dishes, and remember every great dining experience — all in one beautiful place.', ctaText:'Start your journal →', showCta:true, showEmoji:true },
+  bold:    { color:'#ef4444', h1Size:64, bodySize:17, btnRadius:0,  cardRadius:0,  shadow:2, heroPad:112, pageBg:'#f9fafb', fontFamily:"-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", headline:'Never forget a great meal.', accentWord:'great meal.', tagline:'Log meals, rate dishes, and build your personal dining archive.', ctaText:"Get started — it's free", showCta:true, showEmoji:true },
+  minimal: { color:'#111827', h1Size:44, bodySize:15, btnRadius:4,  cardRadius:4,  shadow:0, heroPad:80,  pageBg:'#ffffff',  fontFamily:"-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", headline:'Your restaurant diary', accentWord:'', tagline:'Log meals, rate dishes, and remember every great dining experience.', ctaText:'Sign up →', showCta:false, showEmoji:false },
+  warm:    { color:'#f97316', h1Size:50, bodySize:16, btnRadius:12, cardRadius:16, shadow:2, heroPad:100, pageBg:'#fdf4ff', fontFamily:"Georgia, 'Times New Roman', serif", headline:'Savor every dining moment', accentWord:'every dining moment', tagline:'Your personal diary for meals worth remembering — from hidden gems to fine dining.', ctaText:'Start journaling', showCta:true, showEmoji:true },
+  dark:    { color:'#a855f7', h1Size:52, bodySize:16, btnRadius:8,  cardRadius:12, shadow:3, heroPad:96,  pageBg:'#0f172a',  fontFamily:"-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", headline:'Your personal restaurant diary', accentWord:'restaurant diary', tagline:'Log meals, rate dishes, and remember every great dining experience — all in one place.', ctaText:'Start your journal →', showCta:true, showEmoji:true },
+};
+
+function applyPreset(name) {
+  const p = PRESETS[name];
+  Object.assign(state, p);
+  document.getElementById('colorPicker').value = p.color;
+  document.getElementById('h1Size').value = p.h1Size;        document.getElementById('h1SizeVal').textContent = p.h1Size + 'px';
+  document.getElementById('bodySize').value = p.bodySize;    document.getElementById('bodySizeVal').textContent = p.bodySize + 'px';
+  document.getElementById('fontFamily').value = p.fontFamily;
+  document.getElementById('btnRadius').value = p.btnRadius;  document.getElementById('btnRadiusVal').textContent = p.btnRadius + 'px';
+  document.getElementById('cardRadius').value = p.cardRadius; document.getElementById('cardRadiusVal').textContent = p.cardRadius + 'px';
+  document.getElementById('shadow').value = p.shadow;        document.getElementById('shadowVal').textContent = SHADOW_LABELS[p.shadow];
+  document.getElementById('heroPad').value = p.heroPad;      document.getElementById('heroPadVal').textContent = p.heroPad + 'px';
+  document.getElementById('headline').value = p.headline;
+  document.getElementById('accentWord').value = p.accentWord;
+  document.getElementById('tagline').value = p.tagline;
+  document.getElementById('ctaText').value = p.ctaText;
+  document.getElementById('pageBg').value = p.pageBg;
+  document.getElementById('toggleCta').classList.toggle('on', p.showCta);
+  document.getElementById('toggleEmoji').classList.toggle('on', p.showEmoji);
+  document.querySelectorAll('.swatch').forEach(s =>
+    s.classList.toggle('active', (s.getAttribute('onclick') || '').includes(`'${p.color}'`))
+  );
+  document.querySelectorAll('.preset-btn').forEach(b =>
+    b.classList.toggle('active', (b.getAttribute('onclick') || '').includes(`'${name}'`))
+  );
+  updateAll();
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+updateAll();
+</script>
+</body>
+</html>
